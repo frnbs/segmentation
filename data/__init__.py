@@ -1,6 +1,7 @@
 import importlib
 import sys
-import torch.utils.data 
+import torch.utils.data
+from torch.utils.data import random_split
 from data.base_dataset import BaseDataset
 from utils.colors_text import bcolors
 
@@ -41,5 +42,29 @@ class CustomDatastDataLoader():
         self.dataset = dataset_class(opt)
         print("dataset [{}] was created".format(type(self.dataset).__name__))
 
+        n_val = int(len(self.dataset) * 0.2)
+        n_train = len(self.dataset) - n_val
+        train_set, val_set = random_split(self.dataset, [n_train, n_val], generator=torch.Generator().manual_seed(0))
+
+        self.dataloader_train = torch.utils.data.DataLoader(
+            train_set,
+            batch_size=opt.batch_size,
+            num_workers=int(opt.num_threads))
+        self.dataloader_val = torch.utils.data.DataLoader(
+            val_set,
+            batch_size=opt.batch_size,
+            num_workers=int(opt.num_threads))
+
     def load_data(self):
         return self
+
+    def __len__(self):
+        """Return the number of data in the dataset"""
+        return len(self.dataset)
+
+    def __iter__(self):
+        """Return a batch of data"""
+        for i, data in enumerate(self.dataloader_train):
+            if i * self.opt.batch_size >= self.opt.max_dataset_size:
+                break
+            yield data
