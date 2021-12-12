@@ -1,6 +1,7 @@
-import argparse 
-import os 
+import argparse
+import os
 import torch
+
 
 class BaseOptions():
 
@@ -8,31 +9,32 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self, parser):
-        parser.add_argument('--dataroot',       required = True,                help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        parser.add_argument('--model',          required = True,    type=str,   help='chooses which model to use. [fcn_32 | ]')
-        parser.add_argument('--dataset_mode',   required = True,    type=str,   help='chooses how datasets are loaded. [single | ]')
+        parser.add_argument('--dataroot', required=True,
+                            help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
+        parser.add_argument('--model', required=True, type=str, help='chooses which model to use. [fcn_32 | ]')
+        parser.add_argument('--dataset_mode', required=True, type=str,
+                            help='chooses how datasets are loaded. [single | ]')
         parser.add_argument('--batch_size', type=int, default=1, help='input batch size')
         parser.add_argument('--num_threads', default=1, type=int, help='# threads for loading data')
         parser.add_argument('--max_dataset_size', type=int, default=float("inf"),
                             help='Maximum number of samples allowed per dataset. If the dataset directory contains more than max_dataset_size, only a subset is loaded.')
+        parser.add_argument('--verbose', action='store_true', help='if specified, print more debugging information')
+        parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
 
-        self.initialized = True 
-        return parser 
+        self.initialized = True
+        return parser
 
     def gather_options(self):
-
         if not self.initialized:
             parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
             parser = self.initialize(parser)
 
         opt = parser.parse_args()
-        
-        model_name = opt.model 
+
+        model_name = opt.model
         return parser.parse_args()
 
-
     def parse(self):
-        
         opt = self.gather_options()
         self.opt = opt
         return self.opt
