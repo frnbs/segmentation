@@ -2,9 +2,13 @@ from .base_model import BaseModel
 from .fcn.fcn_32 import FCN_32
 from utils.colors_text import bcolors
 import torch
-from torchsummary import summary
+from torch import optim
 import sys
-
+from torch import nn
+import torch.nn.functional as F
+from utils.dice_score import dice_loss
+import matplotlib.pyplot as plt
+import cv2 as cv
 
 class FCNModel(BaseModel):
     def __init__(self, opt):
@@ -24,7 +28,7 @@ class FCNModel(BaseModel):
             print("{}Closing!!! {}".format(bcolors.FAIL, bcolors.ENDC))
             sys.exit()
 
-    def set_input(self, input):
+    def set_input(self, input, mask):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
@@ -32,15 +36,22 @@ class FCNModel(BaseModel):
 
         The option 'direction' can be used to swap domain A and domain B.
         """
-        input = torch.unsqueeze(input, 0)
-        self.real_A = input.to(self.device)
+        input_img = torch.unsqueeze(input, 0)
+        mask = torch.unsqueeze(mask, 0)
+        self.img = input_img.to(self.device)
+        self.mask = mask.to(self.device)
 
     def forward(self):
-        self.output = self.FCN(self.real_A.float())
-        print("AAA")
+        self.mask_pred = self.FCN(self.img.float())
 
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         # forward
-        self.forward()
 
+        criterion = nn.CrossEntropyLoss()
+        self.optimizer = optim.RMSprop(self.FCN.parameters(), lr=0.001, weight_decay=1e-8, momentum=0.9)
+        self.optimizer.zero_grad()
+        self.forward()
+        self.loss = criterion(self.mask_pred, self.mask.float()) + dice_loss(F.softmax(self.mask_pred, dim=1).float(), self.mask.float())
+        self.loss.backward()
+        self.optimizer.step()

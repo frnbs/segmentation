@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class FCN_32(nn.Module):
-    def __init__(self, n_class=21):
+    def __init__(self, n_class=1):
         super(FCN_32, self).__init__()
         # conv1
         self.conv1_1 = nn.Conv2d(1, 64, 3, padding=100)
@@ -59,6 +59,7 @@ class FCN_32(nn.Module):
         self.score_fr = nn.Conv2d(4096, n_class, 1)
         self.upscore = nn.ConvTranspose2d(n_class, n_class, 64, stride=32,
                                           bias=False)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         h = x
@@ -95,5 +96,6 @@ class FCN_32(nn.Module):
 
         h = self.upscore(h)
         h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
+        h = self.sigmoid(h)
 
         return h

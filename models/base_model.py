@@ -27,7 +27,7 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     @abstractmethod
-    def set_input(self, input):
+    def set_input(self, input_img, mask=None):
         pass
 
     def print_networks(self, verbose):

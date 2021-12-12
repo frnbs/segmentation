@@ -30,7 +30,7 @@ class singledataset(BaseDataset):
 
         mask = self.load(mask_file)
         img = self.load(img_file)
-        return {"img": img, "mask_file": mask}
+        return {"img": img, "mask": mask}
 
     def __len__(self):
 
